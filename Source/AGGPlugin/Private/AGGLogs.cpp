@@ -1,0 +1,4 @@
+#include "AGGLogs.h"
+
+DEFINE_LOG_CATEGORY(LogAGG);
+DEFINE_LOG_CATEGORY(UntAGG);
