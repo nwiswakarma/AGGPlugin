@@ -1,3 +1,28 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// MIT License
+// 
+// Copyright (c) 2018-2019 Nuraga Wiswakarma
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+////////////////////////////////////////////////////////////////////////////////
 // 
 
 #pragma once
@@ -5,228 +30,132 @@
 #include "AGGTypes.h"
 #include "AGGContext.h"
 #include "AGGRendererObject.h"
+#include "AGGPathController.h"
 #include "AGGTypedContext.generated.h"
 
+typedef class TAGGRenderBuffer< FAGGPFG8     > FAGGBufferG8;
+typedef class TAGGRenderBuffer< FAGGPFBGRA32 > FAGGBufferBGRA32;
+
 UCLASS(BlueprintType, Blueprintable)
-class AGGPLUGIN_API UAGGContextScanlineBGRA : public UAGGContext
+class AGGPLUGIN_API UAGGContextG8 : public UAGGContext
 {
-	GENERATED_BODY()
-
-    typedef TAGGBufferBGRA32 TBuffer;
-    typedef TAGGScanlineRenderer<TBuffer::TPixFmt> TRenderer;
-
-    typedef TSharedPtr<TBuffer> TPSBuffer;
-    typedef TSharedPtr<TRenderer> TPSRenderer;
-
-	UPROPERTY(Transient)
-    UAGGScanlineRenderer* Renderer;
+    GENERATED_BODY()
 
 protected:
 
-    TPSBuffer ContextBuffer;
-    TPSRenderer ContextRenderer;
+    typedef FAGGBufferG8 FBuffer;
+
+    TSharedPtr<FBuffer> ContextBuffer;
 
 public:
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
-    virtual UAGGScanlineRenderer* GetRendererController()
+    virtual void InitContext() override
     {
-        return Renderer;
+        UAGGContext::InitContext();
+
+        ContextBuffer = MakeShareable(new FBuffer());
     }
 
-    // BEGIN UAGGContext Interface
-
-    virtual void InitContext()
-    {
-        ContextBuffer = MakeShareable( new TBuffer() );
-        ContextRenderer = MakeShareable( new TRenderer() );
-
-        if (! Renderer)
-        {
-            Renderer = NewObject<UAGGScanlineRenderer>(this);
-        }
-
-        if (! PathController)
-        {
-            PathController = NewObject<UAGGPathController>(this);
-        }
-    }
-
-    virtual void ClearContext()
-    {
-        ContextBuffer.Reset();
-        ContextRenderer.Reset();
-        Renderer = nullptr;
-        PathController = nullptr;
-    }
-
-    virtual void InitBuffer(int32 w, int32 h, int32 c, bool bSq)
-    {
-        check(ContextBuffer.IsValid());
-        check(ContextRenderer.IsValid());
-        check(Renderer);
-
-        ContextBuffer->Init(w, h, c, bSq);
-        ContextRenderer->ConstructRenderer( *ContextBuffer->GetPixFmt() );
-        Renderer->SetRenderer( &ContextRenderer->Renderer );
-    }
-
-    virtual void ClearBuffer(uint8 ClearVal)
+    virtual void ClearContext() override
     {
         if (ContextBuffer.IsValid())
-            ContextBuffer->Clear(0);
-    }
-
-    virtual void RenderContext()
-    {
-        check(ContextBuffer.IsValid());
-        check(ContextBuffer->IsValid());
-        check(ContextRenderer.IsValid());
-        check(Renderer);
-
-        ContextRenderer->AddPath(**GetPathController());
-        ContextRenderer->Render();
-    }
-
-    virtual IAGGRenderBuffer* GetBuffer()
-    {
-        return ContextBuffer.Get();
-    }
-
-    virtual const IAGGRenderBuffer* GetBuffer() const
-    {
-        return ContextBuffer.Get();
-    }
-
-    virtual EPixelFormat GetPixelFormat()
-    {
-        return EPixelFormat::PF_B8G8R8A8;
-    }
-
-    virtual void SetColor(const FColor& Color)
-    {
-        check(Renderer);
-        return Renderer->SetColor(Color);
-    }
-
-    virtual void SetColorByte(uint8 Color)
-    {
-        check(Renderer);
-        return Renderer->SetColorByte(Color);
-    }
-
-    // END UAGGContext Interface
-
-};
-
-UCLASS(BlueprintType, Blueprintable)
-class AGGPLUGIN_API UAGGContextScanlineG8 : public UAGGContext
-{
-	GENERATED_BODY()
-
-    typedef TAGGBufferG8 TBuffer;
-    typedef TAGGScanlineRenderer<TBuffer::TPixFmt> TRenderer;
-
-    typedef TSharedPtr<TBuffer> TPSBuffer;
-    typedef TSharedPtr<TRenderer> TPSRenderer;
-
-	UPROPERTY(Transient)
-    UAGGScanlineRenderer* Renderer;
-
-protected:
-
-    TPSBuffer ContextBuffer;
-    TPSRenderer ContextRenderer;
-
-public:
-
-    UFUNCTION(BlueprintCallable, Category = "AGG")
-    virtual UAGGScanlineRenderer* GetRendererController()
-    {
-        return Renderer;
-    }
-
-    // BEGIN UAGGContext Interface
-
-    virtual void InitContext()
-    {
-        ContextBuffer = MakeShareable( new TBuffer() );
-        ContextRenderer = MakeShareable( new TRenderer() );
-
-        if (! Renderer)
         {
-            Renderer = NewObject<UAGGScanlineRenderer>(this);
+            ContextBuffer->Reset();
+            ContextBuffer.Reset();
         }
 
-        if (! PathController)
-        {
-            PathController = NewObject<UAGGPathController>(this);
-        }
+        UAGGContext::ClearContext();
     }
 
-    virtual void ClearContext()
-    {
-        ContextBuffer.Reset();
-        ContextRenderer.Reset();
-        Renderer = nullptr;
-        PathController = nullptr;
-    }
-
-    virtual void InitBuffer(int32 w, int32 h, int32 c, bool bSq)
+    virtual void InitBuffer(int32 w, int32 h, int32 c, bool bSq) override
     {
         check(ContextBuffer.IsValid());
-        check(ContextRenderer.IsValid());
-        check(Renderer);
 
         ContextBuffer->Init(w, h, c, bSq);
-        ContextRenderer->ConstructRenderer( *ContextBuffer->GetPixFmt() );
-        Renderer->SetRenderer( &ContextRenderer->Renderer );
     }
 
-    virtual void ClearBuffer(uint8 ClearVal)
+    virtual void ClearBuffer(uint8 ClearVal) override
     {
         if (ContextBuffer.IsValid())
+        {
             ContextBuffer->Clear(0);
+        }
     }
 
-    virtual void RenderContext()
-    {
-        check(ContextBuffer.IsValid());
-        check(ContextBuffer->IsValid());
-        check(ContextRenderer.IsValid());
-        check(Renderer);
-
-        ContextRenderer->AddPath(**GetPathController());
-        ContextRenderer->Render();
-    }
-
-    virtual IAGGRenderBuffer* GetBuffer()
+    FORCEINLINE virtual IAGGRenderBuffer* GetBuffer() override
     {
         return ContextBuffer.Get();
     }
 
-    virtual const IAGGRenderBuffer* GetBuffer() const
+    FORCEINLINE virtual const IAGGRenderBuffer* GetBuffer() const override
     {
         return ContextBuffer.Get();
     }
 
-    virtual EPixelFormat GetPixelFormat()
+    virtual EPixelFormat GetPixelFormat() const override
     {
         return EPixelFormat::PF_G8;
     }
+};
 
-    virtual void SetColor(const FColor& Color)
+UCLASS(BlueprintType, Blueprintable)
+class AGGPLUGIN_API UAGGContextBGRA : public UAGGContext
+{
+    GENERATED_BODY()
+
+protected:
+
+    typedef FAGGBufferBGRA32 FBuffer;
+
+    TSharedPtr<FBuffer> ContextBuffer;
+
+public:
+
+    virtual void InitContext() override
     {
-        check(Renderer);
-        return Renderer->SetColor(Color);
+        UAGGContext::InitContext();
+
+        ContextBuffer = MakeShareable(new FBuffer());
     }
 
-    virtual void SetColorByte(uint8 Color)
+    virtual void ClearContext() override
     {
-        check(Renderer);
-        return Renderer->SetColorByte(Color);
+        if (ContextBuffer.IsValid())
+        {
+            ContextBuffer->Reset();
+            ContextBuffer.Reset();
+        }
+
+        UAGGContext::ClearContext();
     }
 
-    // END UAGGContext Interface
+    virtual void InitBuffer(int32 w, int32 h, int32 c, bool bSq) override
+    {
+        check(ContextBuffer.IsValid());
 
+        ContextBuffer->Init(w, h, c, bSq);
+    }
+
+    virtual void ClearBuffer(uint8 ClearVal) override
+    {
+        if (ContextBuffer.IsValid())
+        {
+            ContextBuffer->Clear(0);
+        }
+    }
+
+    FORCEINLINE virtual IAGGRenderBuffer* GetBuffer() override
+    {
+        return ContextBuffer.Get();
+    }
+
+    FORCEINLINE virtual const IAGGRenderBuffer* GetBuffer() const override
+    {
+        return ContextBuffer.Get();
+    }
+
+    virtual EPixelFormat GetPixelFormat() const override
+    {
+        return EPixelFormat::PF_B8G8R8A8;
+    }
 };

@@ -1,12 +1,39 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// MIT License
+// 
+// Copyright (c) 2018-2019 Nuraga Wiswakarma
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+
 #include "AGGJSONSVGUtils.h"
 #include "GenericPlatformMath.h"
 
 DEFINE_LOG_CATEGORY(LogAGGJSVG);
 DEFINE_LOG_CATEGORY(UntAGGJSVG);
 
-void UAGGJSONSVGUtils::DrawJSONSVG(const FJSONSVGDoc& SVGDoc, UAGGContext* Context, const FIntPoint& DocSize)
+void UAGGJSONSVGUtils::DrawJSONSVG(const FJSONSVGDoc& SVGDoc, UAGGContext* Context, UAGGRendererBase* Renderer, const FIntPoint& DocSize)
 {
-    if (! SVGDoc.IsValid() || ! Context)
+    if (! SVGDoc.IsValid() || ! IsValid(Context) || ! IsValid(Renderer))
     {
         UE_LOG(LogAGGJSVG,Warning, TEXT("DrawJSONSVG() ABORTED, INVALID PARAMETERS"));
         return;
@@ -35,6 +62,7 @@ void UAGGJSONSVGUtils::DrawJSONSVG(const FJSONSVGDoc& SVGDoc, UAGGContext* Conte
     UE_LOG(UntAGGJSVG,Warning, TEXT("DrawJSONSVG() Document Properties [bIdentity: %d, extents: %f, scale: %f]"), bIdentity?1:0, transform.Extent, transform.Scale);
 
     Context->ConstructBuffer(texDim, texDim, 0, true);
+    Renderer->AttachBuffer(Context);
 
     if (! Context->HasValidBuffer())
     {
@@ -42,7 +70,7 @@ void UAGGJSONSVGUtils::DrawJSONSVG(const FJSONSVGDoc& SVGDoc, UAGGContext* Conte
         return;
     }
 
-    DrawElement(SVGDoc, *Context, transform);
+    DrawElement(SVGDoc, *Context, *Renderer, transform);
 }
 
 TArray<FVector2D> UAGGJSONSVGUtils::ExtractPath(const FJSONSVGDoc& SVGDoc, UAGGPathController* Path)
@@ -60,7 +88,7 @@ TArray<FVector2D> UAGGJSONSVGUtils::ExtractPath(const FJSONSVGDoc& SVGDoc, UAGGP
     return MoveTemp( Vertices );
 }
 
-void UAGGJSONSVGUtils::DrawElement(const FJSONSVGElement& Element, UAGGContext& Context, const ShapeTransform& T)
+void UAGGJSONSVGUtils::DrawElement(const FJSONSVGElement& Element, UAGGContext& Context, UAGGRendererBase& Renderer, const ShapeTransform& T)
 {
     check(Element.IsValid());
 
@@ -113,12 +141,12 @@ void UAGGJSONSVGUtils::DrawElement(const FJSONSVGElement& Element, UAGGContext& 
 
     if (bShapeConstructed)
     {
-        DrawShape(shapeAttr, Context, T);
+        DrawShape(shapeAttr, Path, Renderer, T);
     }
 
     for (const FJSONSVGElement& child : Element.Children)
     {
-        DrawElement(child, Context, T);
+        DrawElement(child, Context, Renderer, T);
     }
 }
 
@@ -178,34 +206,32 @@ void UAGGJSONSVGUtils::ExtractPath(const FJSONSVGElement& Element, UAGGPathContr
     }
 }
 
-void UAGGJSONSVGUtils::DrawShape(const FJSONSVGShapeAttr& ShapeAttr, UAGGContext& Context, const ShapeTransform& T)
+void UAGGJSONSVGUtils::DrawShape(const FJSONSVGShapeAttr& ShapeAttr, UAGGPathController& Path, UAGGRendererBase& Renderer, const ShapeTransform& T)
 {
     FColor fillColor( FColor::FromHex(ShapeAttr.Fill) );
 
     UE_LOG(UntAGGJSVG,Warning, TEXT("=== path"));
     UE_LOG(UntAGGJSVG,Warning, TEXT("\tpath.Attrs.Fill: %s"), *fillColor.ToString());
 
-    UAGGPathController& path( *Context.GetPathController() );
-
     // Path does not contain any vertices, abort
-    if (path.Num() <= 0)
+    if (Path.Num() <= 0)
     {
         return;
     }
 
     if (! T.bIdentity)
     {
-        path.ResetTransform();
+        Path.ResetTransform();
 
-        path.Translate(-T.Extent, -T.Extent);
-        path.Scale(T.Scale);
-        path.Translate(T.Extent*T.Scale, T.Extent*T.Scale);
+        Path.Translate(-T.Extent, -T.Extent);
+        Path.Scale(T.Scale);
+        Path.Translate(T.Extent*T.Scale, T.Extent*T.Scale);
 
-        path.ApplyTransform();
+        Path.ApplyTransform();
     }
 
-    Context.SetColor(fillColor);
-    Context.RenderContext();
+    Renderer.SetColor(fillColor);
+    Renderer.Render(&Path);
 
     float strokeWidth = ShapeAttr.StrokeWidth;
 
@@ -216,13 +242,13 @@ void UAGGJSONSVGUtils::DrawShape(const FJSONSVGShapeAttr& ShapeAttr, UAGGContext
 
         strokeSettings.Width = strokeWidth;
 
-        path.PathAsStroke(strokeSettings);
+        Path.PathAsStroke(strokeSettings);
 
         UE_LOG(UntAGGJSVG,Warning, TEXT("\tpath.Attrs.Stroke: %s"), *strokeColor.ToString());
         UE_LOG(UntAGGJSVG,Warning, TEXT("\tpath.Attrs.StrokeWidth: %f"), strokeWidth);
 
-        Context.SetColor(strokeColor);
-        Context.RenderContext();
+        Renderer.SetColor(fillColor);
+        Renderer.Render(&Path);
     }
 }
 

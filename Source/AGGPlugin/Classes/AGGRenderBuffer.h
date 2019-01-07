@@ -1,3 +1,28 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// MIT License
+// 
+// Copyright (c) 2018-2019 Nuraga Wiswakarma
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+////////////////////////////////////////////////////////////////////////////////
 // 
 
 #pragma once
@@ -9,13 +34,15 @@
 #include "SharedPointer.h"
 #include "Engine/Texture2D.h"
 
-class IAGGRenderBuffer
+#include "AGGTypes.h"
+
+class AGGPLUGIN_API IAGGRenderBuffer
 {
 
 public:
 
     typedef TArray<uint8> FByteBuffer;
-    typedef uint8* TRawBuffer;
+    typedef uint8* FRawBuffer;
 
     // Apply default virtual destructor
 	virtual ~IAGGRenderBuffer() = default;
@@ -81,7 +108,12 @@ public:
         return BufferWidth*BufferBPP;
     }
 
-    FORCEINLINE int32 GetBufferSize() const
+    FORCEINLINE int32 GetBPP() const
+    {
+        return BufferBPP;
+    }
+
+    FORCEINLINE SIZE_T GetBufferSize() const
     {
         return Buffer.Num();
     }
@@ -99,6 +131,11 @@ public:
     // Buffer Operations
 
 	FORCEINLINE const FByteBuffer& GetByteBuffer() const
+    {
+        return Buffer;
+    }
+
+	FORCEINLINE FByteBuffer& GetByteBuffer()
     {
         return Buffer;
     }
@@ -121,7 +158,7 @@ public:
             FMemory::Memset(Buffer.GetData(), ClrVal, GetBufferSize());
     }
 
-	FORCEINLINE bool CopyFrom(TRawBuffer InBuffer)
+	FORCEINLINE bool CopyFrom(FRawBuffer InBuffer)
     {
         if (IsValid())
         {
@@ -131,12 +168,22 @@ public:
         return false;
     }
 
-	FORCEINLINE void CopyFromUnsafe(TRawBuffer InBuffer)
+	FORCEINLINE bool CopyFrom(const FByteBuffer& InBuffer)
+    {
+        if (IsValid())
+        {
+            FMemory::Memcpy(Buffer.GetData(), InBuffer.GetData(), GetBufferSize());
+            return true;
+        }
+        return false;
+    }
+
+	FORCEINLINE void CopyFromUnsafe(FRawBuffer InBuffer)
     {
         FMemory::Memcpy(Buffer.GetData(), InBuffer, GetBufferSize());
     }
 
-	FORCEINLINE bool CopyTo(TRawBuffer OutBuffer) const
+	FORCEINLINE bool CopyTo(FRawBuffer OutBuffer) const
     {
         if (IsValid())
         {
@@ -146,7 +193,7 @@ public:
         return false;
     }
 
-	FORCEINLINE void CopyToUnsafe(TRawBuffer OutBuffer) const
+	FORCEINLINE void CopyToUnsafe(FRawBuffer OutBuffer) const
     {
         FMemory::Memcpy(OutBuffer, Buffer.GetData(), GetBufferSize());
     }
@@ -157,7 +204,7 @@ public:
         {
             FTexture2DMipMap& Mip( Tex->PlatformData->Mips[MipLevel] );
             void* InData( Mip.BulkData.Lock(LOCK_READ_ONLY) );
-            CopyFrom( static_cast<TRawBuffer>(InData) );
+            CopyFrom( static_cast<FRawBuffer>(InData) );
             Mip.BulkData.Unlock();
             return true;
         }
@@ -170,7 +217,7 @@ public:
         {
             FTexture2DMipMap& Mip( Tex->PlatformData->Mips[MipLevel] );
             void* OutData( Mip.BulkData.Lock(LOCK_READ_WRITE) );
-            CopyTo( static_cast<TRawBuffer>(OutData) );
+            CopyTo( static_cast<FRawBuffer>(OutData) );
             Mip.BulkData.Unlock();
             return true;
         }
@@ -203,17 +250,16 @@ private:
 
 };
 
-template<class TPixelFormat> class TAGGRenderBuffer : public IAGGRenderBuffer
+template<class FPixFmtType>
+class AGGPLUGIN_API TAGGRenderBuffer : public IAGGRenderBuffer
 {
 
 public:
 
-    typedef TPixelFormat TPixFmt;
-    typedef TSharedPtr<TPixFmt> TPSPixFmt;
+    typedef FPixFmtType FPixFmt;
+    typedef TSharedPtr<FPixFmt> FPSPixFmt;
 
-	TAGGRenderBuffer()
-	{
-	}
+	TAGGRenderBuffer() = default;
 
 	TAGGRenderBuffer(int32 InBufferD, uint8 InClearVal=0, bool bSquareSize=false)
 	{
@@ -227,29 +273,18 @@ public:
 
 	virtual void InitPixFmt()
     {
-        BufferBPP = TPixFmt::pix_width;
-        PixFmt = MakeShareable( new TPixFmt(AGGBuffer) );
+        BufferBPP = FPixFmt::pix_width;
     }
 
 	virtual void Reset()
     {
-        PixFmt.Reset();
         IAGGRenderBuffer::Reset();
-    }
-
-    FORCEINLINE TPixFmt* GetPixFmt()
-    {
-        return PixFmt.IsValid() ? PixFmt.Get() : nullptr;
     }
 
 private:
 
-    TPSPixFmt PixFmt;
-
     // Non-Copyable
-    TAGGRenderBuffer(const TAGGRenderBuffer<TPixFmt>&);
-    const TAGGRenderBuffer<TPixFmt>& operator = (
-        const TAGGRenderBuffer<TPixFmt>&
-    );
+    TAGGRenderBuffer(const TAGGRenderBuffer<FPixFmt>&) = delete;
+    const TAGGRenderBuffer<FPixFmt>& operator=(const TAGGRenderBuffer<FPixFmt>&) = delete;
 
 };

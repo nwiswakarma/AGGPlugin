@@ -1,3 +1,28 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// MIT License
+// 
+// Copyright (c) 2018-2019 Nuraga Wiswakarma
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+////////////////////////////////////////////////////////////////////////////////
 // 
 
 #pragma once
@@ -140,6 +165,8 @@ class AGGPLUGIN_API UAGGPathController : public UObject
 {
 	GENERATED_BODY()
 
+private:
+
     struct FConversionEntry
     {
         EAGGPathConv ConversionType;
@@ -164,61 +191,66 @@ class AGGPLUGIN_API UAGGPathController : public UObject
 
 public:
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    FORCEINLINE agg::path_storage& GetAGGPath()
+    {
+        return Path;
+    }
+
+    UFUNCTION(BlueprintCallable, Category="AGG")
     int32 Num() const
     {
         return Path.total_vertices();
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void ResetTransform()
     {
         Transform.reset();
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void Translate(float x, float y)
     {
         Transform *= agg::trans_affine_translation(x, y);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void Rotation(float angleRad)
     {
         Transform *= agg::trans_affine_rotation(angleRad);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void Scale(float scale)
     {
         Transform *= agg::trans_affine_scaling(scale);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void ApplyTransform()
     {
         Path.transform_all_paths(Transform);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     bool HasPathConversion() const
     {
         return ! ConversionQueue.IsEmpty();
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void MoveTo(float x, float y)
     {
         Path.move_to(x, y);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void LineTo(float x, float y)
     {
         Path.line_to(x, y);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void ArcTo(float rx, float ry, float angle,
                bool bLargeArc, bool bSweep,
                float x, float y)
@@ -226,7 +258,7 @@ public:
         Path.arc_to(rx, ry, angle, bLargeArc, bSweep, x, y);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void CurveTo(float x1, float y1, float x2, float y2)
     {
         agg::curve3 curve;
@@ -238,37 +270,37 @@ public:
         Path.concat_path(curve);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void Curve3(float x1, float y1, float x2, float y2)
     {
         Path.curve3(x1, y1, x2, y2);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void SmoothCurve3(float x, float y)
     {
         Path.curve3(x, y);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void Curve4(float cx0, float cy0, float cx1, float cy1, float x1, float y1)
     {
         Path.curve4(cx0, cy0, cx1, cy1, x1, y1);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void SmoothCurve4(float cx1, float cy1, float x1, float y1)
     {
         Path.curve4(cx1, cy1, x1, y1);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void AddCircle(float x, float y, float r, int32 step = 0)
     {
         AddEllipse(x, y, r, r, step);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void AddEllipse(float x, float y, float rx, float ry, int32 step = 0)
     {
         if (step < 0)
@@ -277,7 +309,7 @@ public:
         Path.concat_path(ellipse);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void AddRoundRect(float x, float y, float rx, float ry, float w, float h)
     {
         agg::rounded_rect rect;
@@ -286,13 +318,13 @@ public:
         Path.concat_path(rect);
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void ClosePolygon()
     {
         Path.close_polygon();
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void PathAsStroke(FAGGStrokeSettings Settings)
     {
         EAGGPathConv e = EAGGPathConv::STROKE;
@@ -300,7 +332,7 @@ public:
         ConversionQueue.Enqueue(FConversionEntry(e, s));
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void PathAsDash(FAGGDashSettings Settings)
     {
         if (Settings.DashCompositions.Num() <= 0)
@@ -313,7 +345,7 @@ public:
         ConversionQueue.Enqueue(FConversionEntry(e, s));
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void PathAsCurve(FAGGCurveSettings Settings)
     {
         EAGGPathConv e = EAGGPathConv::CURVE;
@@ -321,7 +353,7 @@ public:
         ConversionQueue.Enqueue(FConversionEntry(e, s));
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void ApplyConversion()
     {
         while (! ConversionQueue.IsEmpty())
@@ -330,8 +362,8 @@ public:
             ConversionQueue.Dequeue(entry);
 
             agg::path_storage p;
-            EAGGPathConv e( entry.ConversionType );
-            int32 s( entry.SettingIndex );
+            EAGGPathConv e(entry.ConversionType);
+            int32 s(entry.SettingIndex);
 
             switch (e)
             {
@@ -364,7 +396,7 @@ public:
         ResetConversion();
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     TArray<FVector2D> ToArray(bool bApplyConversion = true)
     {
         TArray<FVector2D> points;
@@ -409,13 +441,351 @@ public:
         points.Shrink();
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
     void ClearConversion()
     {
         ConversionQueue.Empty();
     }
 
-    UFUNCTION(BlueprintCallable, Category = "AGG")
+    UFUNCTION(BlueprintCallable, Category="AGG")
+    void Clear()
+    {
+        Path.remove_all();
+    }
+
+    FORCEINLINE agg::path_storage& GetStorage(bool bApplyConversion = true)
+    {
+        if (bApplyConversion && HasPathConversion())
+            ApplyConversion();
+        return Path;
+    }
+
+    FORCEINLINE agg::path_storage& operator*()
+    {
+        return GetStorage();
+    }
+
+private:
+
+    template<class TVertexSource>
+    void PathToStroke(TVertexSource& in_vs, TVertexSource& out_vs, const FAGGStrokeSettings& settings)
+    {
+        agg::conv_stroke<TVertexSource> stroke(in_vs);
+        // Apply Settings
+        stroke.width(settings.Width);
+        stroke.line_join(agg::line_join_e(settings.LineJoin));
+        stroke.line_cap(agg::line_cap_e(settings.LineCap));
+        stroke.inner_join(agg::inner_join_e(settings.InnerJoin));
+        stroke.miter_limit(settings.MiterLimit);
+        stroke.inner_miter_limit(settings.InnerMiterLimit);
+        // Concat Path
+        out_vs.concat_path(stroke);
+    }
+
+    template<class TVertexSource>
+    void PathToDash(TVertexSource& in_vs, TVertexSource& out_vs, const FAGGDashSettings& ds)
+    {
+        const FAGGStrokeSettings& ss( ds.StrokeSettings );
+        agg::conv_dash<TVertexSource> dash(in_vs);
+        agg::conv_stroke< agg::conv_dash<TVertexSource> > stroke(dash);
+        // Apply Dash Settings
+        for (const FAGGDashComp& comp : ds.DashCompositions)
+            dash.add_dash(comp.DashLength, comp.GapLength);
+        dash.dash_start(ds.DashStart);
+        // Apply Stroke Settings
+        stroke.width(ss.Width);
+        stroke.line_join(agg::line_join_e(ss.LineJoin));
+        stroke.line_cap(agg::line_cap_e(ss.LineCap));
+        stroke.inner_join(agg::inner_join_e(ss.InnerJoin));
+        stroke.miter_limit(ss.MiterLimit);
+        stroke.inner_miter_limit(ss.InnerMiterLimit);
+        // Concat Path
+        out_vs.concat_path(stroke);
+    }
+
+    template<class TVertexSource>
+    void PathToCurve(TVertexSource& in_vs, TVertexSource& out_vs, const FAGGCurveSettings& settings)
+    {
+        agg::conv_curve<TVertexSource> curve(in_vs);
+        // Apply Settings
+        curve.approximation_method(
+            agg::curve_approximation_method_e(settings.ApproximationMethod));
+        curve.approximation_scale(settings.ApproximationScale);
+        curve.angle_tolerance(agg::deg2rad(settings.AngleTolerance));
+        // Concat Path
+        out_vs.concat_path(curve);
+    }
+
+    void ResetConversion()
+    {
+        StrokeSettings.Reset();
+        DashSettings.Reset();
+        CurveSettings.Reset();
+    }
+
+};
+
+// 
+
+class AGGPLUGIN_API FAGGPathController
+{
+private:
+
+    struct FConversionEntry
+    {
+        EAGGPathConv ConversionType;
+        int32 SettingIndex;
+
+        FConversionEntry() = default;
+
+        FConversionEntry(EAGGPathConv t, int32 i)
+            : ConversionType(t)
+            , SettingIndex(i)
+        {
+        }
+    };
+
+    TQueue<FConversionEntry> ConversionQueue;
+    TArray<FAGGStrokeSettings> StrokeSettings;
+    TArray<FAGGDashSettings> DashSettings;
+    TArray<FAGGCurveSettings> CurveSettings;
+
+    agg::path_storage Path;
+    agg::trans_affine Transform;
+
+public:
+
+    FORCEINLINE agg::path_storage& GetAGGPath()
+    {
+        return Path;
+    }
+
+    int32 Num() const
+    {
+        return Path.total_vertices();
+    }
+
+    void ResetTransform()
+    {
+        Transform.reset();
+    }
+
+    void Translate(float x, float y)
+    {
+        Transform *= agg::trans_affine_translation(x, y);
+    }
+
+    void Rotation(float angleRad)
+    {
+        Transform *= agg::trans_affine_rotation(angleRad);
+    }
+
+    void Scale(float scale)
+    {
+        Transform *= agg::trans_affine_scaling(scale);
+    }
+
+    void ApplyTransform()
+    {
+        Path.transform_all_paths(Transform);
+    }
+
+    bool HasPathConversion() const
+    {
+        return ! ConversionQueue.IsEmpty();
+    }
+
+    void MoveTo(float x, float y)
+    {
+        Path.move_to(x, y);
+    }
+
+    void LineTo(float x, float y)
+    {
+        Path.line_to(x, y);
+    }
+
+    void ArcTo(float rx, float ry, float angle,
+               bool bLargeArc, bool bSweep,
+               float x, float y)
+    {
+        Path.arc_to(rx, ry, angle, bLargeArc, bSweep, x, y);
+    }
+
+    void CurveTo(float x1, float y1, float x2, float y2)
+    {
+        agg::curve3 curve;
+        double x0, y0;
+        Path.last_vertex(&x0, &y0);
+        curve.init(x0, y0,
+                   x1, y1,
+                   x2, y2);
+        Path.concat_path(curve);
+    }
+
+    void Curve3(float x1, float y1, float x2, float y2)
+    {
+        Path.curve3(x1, y1, x2, y2);
+    }
+
+    void SmoothCurve3(float x, float y)
+    {
+        Path.curve3(x, y);
+    }
+
+    void Curve4(float cx0, float cy0, float cx1, float cy1, float x1, float y1)
+    {
+        Path.curve4(cx0, cy0, cx1, cy1, x1, y1);
+    }
+
+    void SmoothCurve4(float cx1, float cy1, float x1, float y1)
+    {
+        Path.curve4(cx1, cy1, x1, y1);
+    }
+
+    void AddCircle(float x, float y, float r, int32 step = 0)
+    {
+        AddEllipse(x, y, r, r, step);
+    }
+
+    void AddEllipse(float x, float y, float rx, float ry, int32 step = 0)
+    {
+        if (step < 0)
+            step = 0;
+        agg::ellipse ellipse(x, y, rx, ry, step);
+        Path.concat_path(ellipse);
+    }
+
+    void AddRoundRect(float x, float y, float rx, float ry, float w, float h)
+    {
+        agg::rounded_rect rect;
+        rect.rect(x, y, x+w, y+h);
+        rect.radius(rx, ry);
+        Path.concat_path(rect);
+    }
+
+    void ClosePolygon()
+    {
+        Path.close_polygon();
+    }
+
+    void PathAsStroke(FAGGStrokeSettings Settings)
+    {
+        EAGGPathConv e = EAGGPathConv::STROKE;
+        int32 s = StrokeSettings.Add(Settings);
+        ConversionQueue.Enqueue(FConversionEntry(e, s));
+    }
+
+    void PathAsDash(FAGGDashSettings Settings)
+    {
+        if (Settings.DashCompositions.Num() <= 0)
+        {
+            return;
+        }
+
+        EAGGPathConv e = EAGGPathConv::DASH;
+        int32 s = DashSettings.Add(Settings);
+        ConversionQueue.Enqueue(FConversionEntry(e, s));
+    }
+
+    void PathAsCurve(FAGGCurveSettings Settings)
+    {
+        EAGGPathConv e = EAGGPathConv::CURVE;
+        int32 s = CurveSettings.Add(Settings);
+        ConversionQueue.Enqueue(FConversionEntry(e, s));
+    }
+
+    void ApplyConversion()
+    {
+        while (! ConversionQueue.IsEmpty())
+        {
+            FConversionEntry entry;
+            ConversionQueue.Dequeue(entry);
+
+            agg::path_storage p;
+            EAGGPathConv e( entry.ConversionType );
+            int32 s( entry.SettingIndex );
+
+            switch (e)
+            {
+                case EAGGPathConv::STROKE:
+                    if (StrokeSettings.IsValidIndex(s))
+                    {
+                        PathToStroke(Path, p, StrokeSettings[s]);
+                        Path = p;
+                    }
+                    break;
+
+                case EAGGPathConv::DASH:
+                    if (DashSettings.IsValidIndex(s))
+                    {
+                        PathToDash(Path, p, DashSettings[s]);
+                        Path = p;
+                    }
+                    break;
+
+                case EAGGPathConv::CURVE:
+                    if (CurveSettings.IsValidIndex(s))
+                    {
+                        PathToCurve(Path, p, CurveSettings[s]);
+                        Path = p;
+                    }
+                    break;
+            }
+        }
+
+        ResetConversion();
+    }
+
+    TArray<FVector2D> ToArray(bool bApplyConversion = true)
+    {
+        TArray<FVector2D> points;
+        double x, y;
+
+        if (bApplyConversion && HasPathConversion())
+        {
+            ApplyConversion();
+        }
+
+        Path.rewind(0);
+        points.Reserve(Path.total_vertices());
+
+        while (! agg::is_stop(Path.vertex(&x, &y)))
+        {
+            points.Emplace(x, y);
+        }
+
+        points.Shrink();
+
+        return MoveTemp(points);
+    }
+
+    void ToArray(TArray<FVector2D>& OutArray, bool bApplyConversion = true)
+    {
+        TArray<FVector2D>& points( OutArray );
+        double x, y;
+
+        if (bApplyConversion && HasPathConversion())
+        {
+            ApplyConversion();
+        }
+
+        points.Reserve(points.Num() + Path.total_vertices());
+        Path.rewind(0);
+
+        while (! agg::is_stop(Path.vertex(&x, &y)))
+        {
+            points.Emplace(x, y);
+        }
+
+        points.Shrink();
+    }
+
+    void ClearConversion()
+    {
+        ConversionQueue.Empty();
+    }
+
     void Clear()
     {
         Path.remove_all();
