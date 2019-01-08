@@ -1,7 +1,7 @@
 {
 	"PluginFileVersion" : 1,
 
-	"FriendlyName" : "AGGPlugin",
+	"FriendlyName" : "AGG Plugin",
 	"Version" : 1,
 	"VersionName" : "1.0.0",
 	"CreatedBy" : "", 
@@ -15,19 +15,6 @@
 			"Type" : "Runtime",
 			"LoadingPhase" : "Default",
 			"WhitelistPlatforms" : [ "Win64", "Win32", "Mac" ]
-		},
-		{
-			"Name" : "AGGJSONSVG",
-			"Type" : "Runtime",
-			"LoadingPhase" : "Default",
-			"WhitelistPlatforms" : [ "Win64", "Win32", "Mac" ]
-		}
-	],
-	"Plugins":
-    [
-		{
-			"Name" : "JSONSVGPlugin",
-			"Enabled": true
 		}
 	]
 }
