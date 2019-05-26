@@ -94,7 +94,7 @@ protected:
 public:
 
     FRasterizer Rasterizer;
-    agg::rgba8  Color;
+    agg::rgba8 Color;
 
     FORCEINLINE void SetColor(uint8 v)
     {
@@ -122,12 +122,12 @@ public:
         AddPath(Path);
     }
 
-    FORCEINLINE void Render(agg::path_storage& Path, FColor Color, EAGGScanline Scanline)
+    FORCEINLINE void Render(agg::path_storage& Path, FColor InColor, EAGGScanline ScanlineType)
     {
         SetPath(Path);
-        SetColor(Color);
+        SetColor(InColor);
 
-        switch (Scanline)
+        switch (ScanlineType)
         {
             case EAGGScanline::SL_P8:  RenderP8();  break;
             case EAGGScanline::SL_U8:  RenderU8();  break;
