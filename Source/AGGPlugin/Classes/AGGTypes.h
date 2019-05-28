@@ -34,6 +34,7 @@
 
 typedef agg::pixfmt_gray8  FAGGPFG8;
 typedef agg::pixfmt_bgra32 FAGGPFBGRA32;
+typedef agg::pixfmt_bgra32_plain FAGGPFBGRA32_Plain;
 
 typedef agg::pixfmt_alpha_blend_gray<agg::blender_gray<agg::gray8>, agg::rendering_buffer, 4, 3> FAGGPFAlphaBlendA;
 typedef agg::pixfmt_alpha_blend_gray<agg::blender_gray<agg::gray8>, agg::rendering_buffer, 4, 2> FAGGPFAlphaBlendR;

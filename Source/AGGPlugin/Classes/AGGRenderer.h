@@ -270,6 +270,7 @@ public:
 
 class AGGPLUGIN_API FAGGRendererScanlineG8          : public TAGGRendererScanline<FAGGPFG8>     { };
 class AGGPLUGIN_API FAGGRendererScanlineBGRA        : public TAGGRendererScanline<FAGGPFBGRA32> { };
+class AGGPLUGIN_API FAGGRendererScanlinePlainBGRA   : public TAGGRendererScanline<FAGGPFBGRA32_Plain> { };
 
 class AGGPLUGIN_API FAGGRendererScanlineAlphaBlendR : public TAGGRendererScanline<FAGGPFAlphaBlendR> { };
 class AGGPLUGIN_API FAGGRendererScanlineAlphaBlendG : public TAGGRendererScanline<FAGGPFAlphaBlendG> { };
@@ -279,6 +280,7 @@ class AGGPLUGIN_API FAGGRendererScanlineAlphaBlendB : public TAGGRendererScanlin
 
 class AGGPLUGIN_API FAGGRendererOutlineG8           : public TAGGRendererOutline<FAGGPFG8>     { };
 class AGGPLUGIN_API FAGGRendererOutlineBGRA         : public TAGGRendererOutline<FAGGPFBGRA32> { };
+class AGGPLUGIN_API FAGGRendererOutlinePlainBGRA    : public TAGGRendererOutline<FAGGPFBGRA32_Plain> { };
 
 class AGGPLUGIN_API FAGGRendererOutlineAlphaBlendR  : public TAGGRendererOutline<FAGGPFAlphaBlendR> { };
 class AGGPLUGIN_API FAGGRendererOutlineAlphaBlendG  : public TAGGRendererOutline<FAGGPFAlphaBlendG> { };

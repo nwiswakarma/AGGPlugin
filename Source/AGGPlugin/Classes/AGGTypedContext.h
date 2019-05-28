@@ -35,6 +35,7 @@
 
 typedef class TAGGRenderBuffer< FAGGPFG8     > FAGGBufferG8;
 typedef class TAGGRenderBuffer< FAGGPFBGRA32 > FAGGBufferBGRA32;
+typedef class TAGGRenderBuffer< FAGGPFBGRA32_Plain > FAGGBufferPlainBGRA32;
 
 UCLASS(BlueprintType, Blueprintable)
 class AGGPLUGIN_API UAGGContextG8 : public UAGGContext
@@ -106,6 +107,68 @@ class AGGPLUGIN_API UAGGContextBGRA : public UAGGContext
 protected:
 
     typedef FAGGBufferBGRA32 FBuffer;
+
+    TSharedPtr<FBuffer> ContextBuffer;
+
+public:
+
+    virtual void InitContext() override
+    {
+        UAGGContext::InitContext();
+
+        ContextBuffer = MakeShareable(new FBuffer());
+    }
+
+    virtual void ClearContext() override
+    {
+        if (ContextBuffer.IsValid())
+        {
+            ContextBuffer->Reset();
+            ContextBuffer.Reset();
+        }
+
+        UAGGContext::ClearContext();
+    }
+
+    virtual void InitBuffer(int32 w, int32 h, int32 c, bool bSq) override
+    {
+        check(ContextBuffer.IsValid());
+
+        ContextBuffer->Init(w, h, c, bSq);
+    }
+
+    virtual void ClearBuffer(uint8 ClearVal) override
+    {
+        if (ContextBuffer.IsValid())
+        {
+            ContextBuffer->Clear(0);
+        }
+    }
+
+    FORCEINLINE virtual IAGGRenderBuffer* GetBuffer() override
+    {
+        return ContextBuffer.Get();
+    }
+
+    FORCEINLINE virtual const IAGGRenderBuffer* GetBuffer() const override
+    {
+        return ContextBuffer.Get();
+    }
+
+    virtual EPixelFormat GetPixelFormat() const override
+    {
+        return EPixelFormat::PF_B8G8R8A8;
+    }
+};
+
+UCLASS(BlueprintType, Blueprintable)
+class AGGPLUGIN_API UAGGContextPlainBGRA : public UAGGContext
+{
+    GENERATED_BODY()
+
+protected:
+
+    typedef FAGGBufferPlainBGRA32 FBuffer;
 
     TSharedPtr<FBuffer> ContextBuffer;
 
