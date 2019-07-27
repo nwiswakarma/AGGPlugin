@@ -453,6 +453,9 @@ public:
         Path.remove_all();
     }
 
+    UFUNCTION(BlueprintCallable, Category="AGG")
+    static void ConvertCurvesToPoints(TArray<FVector2D>& OutPoints, const TArray<FVector2D>& InPoints, FAGGCurveSettings Settings, bool bCircular);
+
     FORCEINLINE agg::path_storage& GetStorage(bool bApplyConversion = true)
     {
         if (bApplyConversion && HasPathConversion())
@@ -560,17 +563,17 @@ public:
         return Path;
     }
 
-    int32 Num() const
+    FORCEINLINE int32 Num() const
     {
         return Path.total_vertices();
     }
 
-    void ResetTransform()
+    FORCEINLINE void ResetTransform()
     {
         Transform.reset();
     }
 
-    void Translate(float x, float y)
+    FORCEINLINE void Translate(float x, float y)
     {
         Transform *= agg::trans_affine_translation(x, y);
     }
@@ -580,39 +583,41 @@ public:
         Transform *= agg::trans_affine_rotation(angleRad);
     }
 
-    void Scale(float scale)
+    FORCEINLINE void Scale(float scale)
     {
         Transform *= agg::trans_affine_scaling(scale);
     }
 
-    void ApplyTransform()
+    FORCEINLINE void ApplyTransform()
     {
         Path.transform_all_paths(Transform);
     }
 
-    bool HasPathConversion() const
+    FORCEINLINE bool HasPathConversion() const
     {
         return ! ConversionQueue.IsEmpty();
     }
 
-    void MoveTo(float x, float y)
+    // FLATTENED COMMAND PARAMETER
+
+    FORCEINLINE void MoveTo(float x, float y)
     {
         Path.move_to(x, y);
     }
 
-    void LineTo(float x, float y)
+    FORCEINLINE void LineTo(float x, float y)
     {
         Path.line_to(x, y);
     }
 
-    void ArcTo(float rx, float ry, float angle,
+    FORCEINLINE void ArcTo(float rx, float ry, float angle,
                bool bLargeArc, bool bSweep,
                float x, float y)
     {
         Path.arc_to(rx, ry, angle, bLargeArc, bSweep, x, y);
     }
 
-    void CurveTo(float x1, float y1, float x2, float y2)
+    FORCEINLINE void CurveTo(float x1, float y1, float x2, float y2)
     {
         agg::curve3 curve;
         double x0, y0;
@@ -623,32 +628,32 @@ public:
         Path.concat_path(curve);
     }
 
-    void Curve3(float x1, float y1, float x2, float y2)
+    FORCEINLINE void Curve3(float x1, float y1, float x2, float y2)
     {
         Path.curve3(x1, y1, x2, y2);
     }
 
-    void SmoothCurve3(float x, float y)
+    FORCEINLINE void SmoothCurve3(float x, float y)
     {
         Path.curve3(x, y);
     }
 
-    void Curve4(float cx0, float cy0, float cx1, float cy1, float x1, float y1)
+    FORCEINLINE void Curve4(float cx0, float cy0, float cx1, float cy1, float x1, float y1)
     {
         Path.curve4(cx0, cy0, cx1, cy1, x1, y1);
     }
 
-    void SmoothCurve4(float cx1, float cy1, float x1, float y1)
+    FORCEINLINE void SmoothCurve4(float cx1, float cy1, float x1, float y1)
     {
         Path.curve4(cx1, cy1, x1, y1);
     }
 
-    void AddCircle(float x, float y, float r, int32 step = 0)
+    FORCEINLINE void AddCircle(float x, float y, float r, int32 step = 0)
     {
         AddEllipse(x, y, r, r, step);
     }
 
-    void AddEllipse(float x, float y, float rx, float ry, int32 step = 0)
+    FORCEINLINE void AddEllipse(float x, float y, float rx, float ry, int32 step = 0)
     {
         if (step < 0)
             step = 0;
@@ -656,7 +661,7 @@ public:
         Path.concat_path(ellipse);
     }
 
-    void AddRoundRect(float x, float y, float rx, float ry, float w, float h)
+    FORCEINLINE void AddRoundRect(float x, float y, float rx, float ry, float w, float h)
     {
         agg::rounded_rect rect;
         rect.rect(x, y, x+w, y+h);
@@ -664,19 +669,69 @@ public:
         Path.concat_path(rect);
     }
 
-    void ClosePolygon()
+    // FVECTOR2D COMMAND PARAMETER
+
+    FORCEINLINE void MoveTo(const FVector2D& P)
+    {
+        Path.move_to(P.X, P.Y);
+    }
+
+    FORCEINLINE void LineTo(const FVector2D& P)
+    {
+        Path.line_to(P.X, P.Y);
+    }
+
+    FORCEINLINE void CurveTo(const FVector2D& P1, const FVector2D& P2)
+    {
+        agg::curve3 curve;
+        double x0, y0;
+        Path.last_vertex(&x0, &y0);
+        curve.init(x0, y0,
+                   P1.X, P1.Y,
+                   P2.X, P2.Y);
+        Path.concat_path(curve);
+    }
+
+    FORCEINLINE void Curve3(const FVector2D& P1, const FVector2D& P2)
+    {
+        Path.curve3(P1.X, P1.Y, P2.X, P2.Y);
+    }
+
+    FORCEINLINE void SmoothCurve3(const FVector2D& P)
+    {
+        Path.curve3(P.X, P.Y);
+    }
+
+    FORCEINLINE void Curve4(const FVector2D& CP0, const FVector2D& CP1, const FVector2D& P1)
+    {
+        Path.curve4(CP0.X, CP0.Y, CP1.X, CP1.Y, P1.X, P1.Y);
+    }
+
+    FORCEINLINE void SmoothCurve4(const FVector2D& CP1, const FVector2D& P1)
+    {
+        Path.curve4(CP1.X, CP1.Y, P1.X, P1.Y);
+    }
+
+    //
+
+    FORCEINLINE void ClosePolygon()
     {
         Path.close_polygon();
     }
 
-    void PathAsStroke(FAGGStrokeSettings Settings)
+    FORCEINLINE static FVector2D GetMidPoint(const FVector2D& P0, const FVector2D& P1)
+    {
+        return P0+(P1-P0)*.5f;
+    }
+
+    inline void PathAsStroke(FAGGStrokeSettings Settings)
     {
         EAGGPathConv e = EAGGPathConv::STROKE;
         int32 s = StrokeSettings.Add(Settings);
         ConversionQueue.Enqueue(FConversionEntry(e, s));
     }
 
-    void PathAsDash(FAGGDashSettings Settings)
+    inline void PathAsDash(FAGGDashSettings Settings)
     {
         if (Settings.DashCompositions.Num() <= 0)
         {
@@ -688,7 +743,7 @@ public:
         ConversionQueue.Enqueue(FConversionEntry(e, s));
     }
 
-    void PathAsCurve(FAGGCurveSettings Settings)
+    inline void PathAsCurve(FAGGCurveSettings Settings)
     {
         EAGGPathConv e = EAGGPathConv::CURVE;
         int32 s = CurveSettings.Add(Settings);
@@ -781,12 +836,12 @@ public:
         points.Shrink();
     }
 
-    void ClearConversion()
+    FORCEINLINE void ClearConversion()
     {
         ConversionQueue.Empty();
     }
 
-    void Clear()
+    FORCEINLINE void Clear()
     {
         Path.remove_all();
     }
@@ -854,7 +909,7 @@ private:
         out_vs.concat_path(curve);
     }
 
-    void ResetConversion()
+    FORCEINLINE void ResetConversion()
     {
         StrokeSettings.Reset();
         DashSettings.Reset();
